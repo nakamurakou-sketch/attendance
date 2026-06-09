@@ -1,23 +1,32 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <title>出席確認</title>
 
-https://unpkg.com/html5-qrcode>
+https://unpkg.com/html5-qrcode
 
 <style>
   body { text-align: center; font-family: sans-serif; }
   #reader { width: 300px; margin: auto; }
+  input {
+    font-size: 20px;
+    padding: 10px;
+    width: 80%;
+    margin: 10px;
+  }
   button { padding: 10px; font-size: 16px; margin: 5px; }
 </style>
 </head>
 <body>
 
-<h2>出席確認（カメラ版）</h2>
+<h2>出席確認</h2>
 
 <div id="reader"></div>
+
+<p>または手入力👇</p>
+
+<input id="barcode" placeholder="バーコード入力">
 
 <p id="status"></p>
 
@@ -32,15 +41,15 @@ const API_URL = "https://script.google.com/a/macros/osakashs.ed.jp/s/AKfycbzIsd4
 
 let scannedList = [];
 
-function onScanSuccess(decodedText) {
-  if (!scannedList.includes(decodedText)) {
-    scannedList.push(decodedText);
+function addCode(code) {
+  if (code && !scannedList.includes(code)) {
+    scannedList.push(code);
     updateList();
     document.getElementById("status").textContent =
-      "追加：" + decodedText;
+      "追加：" + code;
   } else {
     document.getElementById("status").textContent =
-      "重複：" + decodedText;
+      "重複または無効";
   }
 }
 
@@ -54,6 +63,19 @@ function updateList() {
     list.appendChild(li);
   });
 }
+
+// カメラスキャン
+function onScanSuccess(decodedText) {
+  addCode(decodedText);
+}
+
+// 手入力（Enter）
+document.getElementById("barcode").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    addCode(e.target.value);
+    e.target.value = "";
+  }
+});
 
 function sendAll() {
   if (scannedList.length === 0) {
@@ -83,10 +105,7 @@ Html5Qrcode.getCameras().then(devices => {
   if (devices.length) {
     html5QrCode.start(
       devices[0].id,
-      {
-        fps: 10,
-        qrbox: 250
-      },
+      { fps: 10, qrbox: 250 },
       onScanSuccess
     );
   }
