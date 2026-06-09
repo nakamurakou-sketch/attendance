@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>出席確認</title>
+<style>
+  body { font-family: sans-serif; text-align: center; }
+  input { font-size: 20px; padding: 10px; width: 80%; }
+  button { font-size: 18px; padding: 10px 20px; margin: 10px; }
+  li { font-size: 18px; }
+</style>
+</head>
+<body>
+
+<h2>出席確認</h2>
+
+<input id="barcode" placeholder="スキャンしてください" autofocus>
+
+<p id="status"></p>
+
+<h3>スキャン済み一覧</h3>
+<ul id="list"></ul>
+
+<button onclick="sendAll()">まとめて送信</button>
+<button onclick="clearList()">リセット</button>
+
+<script>
+const API_URL = "ここにGASのURL";
+
+let scannedList = [];
+
+document.getElementById("barcode").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    const code = e.target.value;
+
+    if (code && !scannedList.includes(code)) {
+      scannedList.push(code);
+      updateList();
+      document.getElementById("status").textContent = "追加：" + code;
+    } else {
+      document.getElementById("status").textContent = "重複または無効";
+    }
+
+    e.target.value = "";
+  }
+});
+
+function updateList() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  scannedList.forEach(code => {
+    const li = document.createElement("li");
+    li.textContent = code;
+    list.appendChild(li);
+  });
+}
+
+function sendAll() {
+  if (scannedList.length === 0) {
+    alert("データがありません");
+    return;
+  }
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ list: scannedList })
+  });
+
+  alert("送信完了 ✅");
+  scannedList = [];
+  updateList();
+}
+
+function clearList() {
+  scannedList = [];
+  updateList();
+}
+</script>
+
+</body>
+</html>
