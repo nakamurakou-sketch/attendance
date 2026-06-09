@@ -101,17 +101,23 @@ function clearList() {
 // カメラ起動
 const html5QrCode = new Html5Qrcode("reader");
 
-
 Html5Qrcode.getCameras().then(devices => {
-  if (devices.length) {
-    html5QrCode.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      onScanSuccess
-    );
-  }
-});
 
+  // 外カメラを探す
+  const backCamera = devices.find(camera =>
+    camera.label.toLowerCase().includes("back") ||
+    camera.label.toLowerCase().includes("rear")
+  );
+
+  const cameraId = backCamera ? backCamera.id : devices[devices.length - 1].id;
+
+  html5QrCode.start(
+    cameraId,
+    { fps: 10, qrbox: 250 },
+    onScanSuccess
+  );
+
+});
 </script>
 
 </body>
