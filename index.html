@@ -4,22 +4,24 @@
 <head>
 <meta charset="UTF-8">
 <title>出席確認</title>
+
+https://unpkg.com/html5-qrcode>
+
 <style>
-  body { font-family: sans-serif; text-align: center; }
-  input { font-size: 20px; padding: 10px; width: 80%; }
-  button { font-size: 18px; padding: 10px 20px; margin: 10px; }
-  li { font-size: 18px; }
+  body { text-align: center; font-family: sans-serif; }
+  #reader { width: 300px; margin: auto; }
+  button { padding: 10px; font-size: 16px; margin: 5px; }
 </style>
 </head>
 <body>
 
-<h2>出席確認</h2>
+<h2>出席確認（カメラ版）</h2>
 
-<input id="barcode" placeholder="スキャンしてください" autofocus>
+<div id="reader"></div>
 
 <p id="status"></p>
 
-<h3>スキャン済み一覧</h3>
+<h3>スキャン済み</h3>
 <ul id="list"></ul>
 
 <button onclick="sendAll()">まとめて送信</button>
@@ -30,21 +32,17 @@ const API_URL = "ここにGASのURL";
 
 let scannedList = [];
 
-document.getElementById("barcode").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    const code = e.target.value;
-
-    if (code && !scannedList.includes(code)) {
-      scannedList.push(code);
-      updateList();
-      document.getElementById("status").textContent = "追加：" + code;
-    } else {
-      document.getElementById("status").textContent = "重複または無効";
-    }
-
-    e.target.value = "";
+function onScanSuccess(decodedText) {
+  if (!scannedList.includes(decodedText)) {
+    scannedList.push(decodedText);
+    updateList();
+    document.getElementById("status").textContent =
+      "追加：" + decodedText;
+  } else {
+    document.getElementById("status").textContent =
+      "重複：" + decodedText;
   }
-});
+}
 
 function updateList() {
   const list = document.getElementById("list");
@@ -77,6 +75,22 @@ function clearList() {
   scannedList = [];
   updateList();
 }
+
+// カメラ起動
+const html5QrCode = new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras().then(devices => {
+  if (devices.length) {
+    html5QrCode.start(
+      devices[0].id,
+      {
+        fps: 10,
+        qrbox: 250
+      },
+      onScanSuccess
+    );
+  }
+});
 </script>
 
 </body>
